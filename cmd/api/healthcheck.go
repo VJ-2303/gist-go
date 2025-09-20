@@ -9,7 +9,7 @@ func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Reques
 		"environment": app.config.env,
 		"version":     "1.0.0",
 	}
-	err := app.writeJSON(w, http.StatusOK, data, nil)
+	err := app.writeJSON(w, http.StatusOK, envelope{"message": data}, nil)
 	if err != nil {
 		app.logger.Println(err)
 		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
