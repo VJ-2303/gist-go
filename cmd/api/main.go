@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 type config struct {
 	port int
 	env  string
+	db   struct {
+		dsn string
+	}
 }
 
 type application struct {
@@ -20,8 +24,12 @@ type application struct {
 func main() {
 	var cfg config
 
-	cfg.port = 4000
-	cfg.env = "devolopment"
+	flag.IntVar(&cfg.port, "port", 4000, "API server port")
+	flag.StringVar(&cfg.env, "env", "devolopment", "Environment (devolopment | staging | production)")
+
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://gistclone:your-password@localhost:5432/gistclone?sslmode=disable", "PostgreSQL DSN")
+
+	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
