@@ -1,6 +1,7 @@
 package data
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,10 +14,10 @@ type Token struct {
 }
 
 func GenerateNewToken(token *Token, jwtSecret string) error {
-	claims := &jwt.RegisteredClaims{
-		Subject:   string(rune(token.UserID)),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(token.Expiry)),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
+	claims := &jwt.MapClaims{
+		"sub": strconv.FormatInt(token.UserID, 10),
+		"exp": jwt.NewNumericDate(time.Now().Add(token.Expiry)),
+		"iat": jwt.NewNumericDate(time.Now()),
 	}
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 

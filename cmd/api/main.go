@@ -57,7 +57,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.port),
-		Handler: app.routes(),
+		Handler: app.authenticate(app.routes()),
 	}
 
 	logger.Printf("starting %s server on %d", app.config.env, app.config.port)

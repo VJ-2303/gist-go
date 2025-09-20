@@ -13,6 +13,7 @@ import (
 var (
 	ErrDuplicateEmail = errors.New("Email Already Exists")
 	ErrUserNotFound   = errors.New("User Not Found")
+	AnonymousUser     = &User{}
 )
 
 type User struct {
@@ -44,6 +45,10 @@ func ValidateLoginUser(v *validator.Validator, email, password string) {
 
 	v.Check(password != "", "password", "must be provided")
 	v.Check(len(password) <= 72, "password", "must be less than 72 character Long")
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
 
 type UserModel struct {
@@ -87,6 +92,36 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Name,
+		&user.Email,
+		&user.PasswordHash,
+		&user.Activated,
+		&user.Version,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (m UserModel) GetByID(userID int64) (*User, error) {
+
+	query := `
+		SELECT id, created_at, name, email, password_hash, activated, version
+		FROM users
+		WHERE id = $1
+			 `
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, userID).Scan(
 		&user.ID,
 		&user.CreatedAt,
 		&user.Name,
