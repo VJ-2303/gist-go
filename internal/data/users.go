@@ -6,6 +6,8 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/vj-2303/gist-go/internal/validator"
 )
 
 var (
@@ -18,16 +20,37 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 	Name         string    `json:"name"`
 	Email        string    `json:"email"`
+	Password     string    `json:"-"`
 	PasswordHash []byte    `json:"-"`
 	Activated    bool      `json:"activated"`
 	Version      int       `json:"-"`
+}
+
+func ValidateUser(v *validator.Validator, user *User) {
+	v.Check(user.Name != "", "name", "must be provided")
+	v.Check(len(user.Name) >= 3, "name", "must be atleast 3 character long")
+	v.Check(len(user.Name) <= 100, "name", "cant be more than 100 chars Long")
+
+	v.Check(user.Email != "", "email", "must be provided")
+	v.Check(validator.Matches(user.Email, validator.EmailRX), "email", "must be an valid email address")
+
+	v.Check(user.Password != "", "password", "must be provided")
+	v.Check(len(user.Password) <= 72, "password", "must be less than 72 character Long")
+}
+
+func ValidateLoginUser(v *validator.Validator, email, password string) {
+	v.Check(email != "", "email", "must be provided")
+	v.Check(validator.Matches(email, validator.EmailRX), "email", "must be an valid email address")
+
+	v.Check(password != "", "password", "must be provided")
+	v.Check(len(password) <= 72, "password", "must be less than 72 character Long")
 }
 
 type UserModel struct {
 	DB *sql.DB
 }
 
-func (m UserModel) Insert(user *User) (*User, error) {
+func (m UserModel) Insert(user *User) error {
 
 	query := `
 		INSERT INTO users (name,email,password_hash,activated)
@@ -40,15 +63,15 @@ func (m UserModel) Insert(user *User) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, user.CreatedAt, user.Version)
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.Version)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, ErrDuplicateEmail
+			return ErrDuplicateEmail
 		}
-		return nil, err
+		return err
 	}
-	return user, nil
+	return nil
 }
 
 func (m UserModel) GetByEmail(email string) (*User, error) {

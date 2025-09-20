@@ -16,6 +16,9 @@ type config struct {
 	db   struct {
 		dsn string
 	}
+	jwt struct {
+		secret string
+	}
 }
 
 type application struct {
@@ -31,6 +34,8 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "devolopment", "Environment (devolopment | staging | production)")
 
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://gistclone:your-password@localhost:5432/gistclone?sslmode=disable", "PostgreSQL DSN")
+
+	flag.StringVar(&cfg.jwt.secret, "jwt-secret", "", "JWT Secret String")
 
 	flag.Parse()
 
