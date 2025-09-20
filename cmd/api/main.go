@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -19,6 +20,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	db     *sql.DB
 }
 
 func main() {
@@ -33,9 +35,18 @@ func main() {
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	db, err := openDB(cfg)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer db.Close()
+
+	logger.Println("database connection pool established")
+
 	app := &application{
 		config: cfg,
 		logger: logger,
+		db:     db,
 	}
 
 	srv := &http.Server{
@@ -44,7 +55,7 @@ func main() {
 	}
 
 	logger.Printf("starting %s server on %d", app.config.env, app.config.port)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	logger.Fatal(err)
 
 	fmt.Println("Starting the gistclone API...")
