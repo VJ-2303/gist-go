@@ -137,3 +137,39 @@ func (m PostModel) GetAllByUserID(userID int64) ([]*Post, error) {
 	}
 	return posts, nil
 }
+
+func (m PostModel) GetByIDOnly(postID int64) (*Post, error) {
+
+	if postID < 1 {
+		return nil, ErrPostNotFound
+	}
+
+	query := `
+		SELECT id,user_id,title,language,code,created_at,version
+		FROM posts
+		WHERE id = $1
+			 `
+
+	var post Post
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, postID).Scan(
+		&post.ID,
+		&post.UserID,
+		&post.Title,
+		&post.Language,
+		&post.Code,
+		&post.CreatedAt,
+		&post.Version,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrPostNotFound
+		} else {
+			return nil, err
+		}
+	}
+	return &post, nil
+}

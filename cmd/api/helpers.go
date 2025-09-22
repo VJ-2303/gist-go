@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -102,4 +104,30 @@ func (app *application) checkPassAndHash(plaintext string, hash []byte) bool {
 		return false
 	}
 	return true
+}
+
+func (app *application) GenerateURLSafeString(length int) (string, error) {
+	// Calculate the number of random bytes needed. Each byte becomes about 1.33 characters in Base64,
+	// so we calculate a slightly larger buffer to be safe and then trim.
+	// For 8 chars, we need 6 random bytes. (6 * 8 / 6 = 8)
+	byteLength := (length * 3) / 4
+
+	// Create a byte slice to hold the random data.
+	randomBytes := make([]byte, byteLength)
+
+	// Read cryptographically secure random bytes into the slice.
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		// If reading random bytes fails, it's a critical error.
+		return "", fmt.Errorf("could not generate random bytes: %w", err)
+	}
+
+	// Encode the random bytes into a URL-safe Base64 string.
+	// URLEncoding uses '-' and '_' instead of '+' and '/'
+	encodedString := base64.URLEncoding.EncodeToString(randomBytes)
+
+	// Base64 encoding can sometimes add padding ('='). We'll remove it.
+	// For our calculation, it shouldn't happen, but it's good practice.
+	// And we trim to the exact length requested.
+	return encodedString[:length], nil
 }

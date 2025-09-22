@@ -20,5 +20,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/posts/:id", app.requiredAuthenticatedUser(app.getPostHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/posts", app.requiredAuthenticatedUser(app.GetAllPostsHandler))
 
+	router.HandlerFunc(http.MethodPost, "/v1/share/:id/create", app.requiredAuthenticatedUser(app.shareLinkCreateHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/share/:shareToken", app.viewSharePostHandler)
+
 	return router
 }
