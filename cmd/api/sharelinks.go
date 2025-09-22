@@ -39,7 +39,7 @@ func (app *application) shareLinkCreateHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
-	sharableLink := "localhost:4000/share/" + shareLink.Token
+	sharableLink := "localhost:4000/v1/share/" + shareLink.Token
 	err = app.writeJSON(w, http.StatusCreated, envelope{"post": post, "Sharable_link": sharableLink}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

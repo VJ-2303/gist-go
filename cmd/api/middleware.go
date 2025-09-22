@@ -59,7 +59,6 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 		sub, err := claims.GetSubject()
-		app.logger.Printf("%v", sub)
 		if err != nil {
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
