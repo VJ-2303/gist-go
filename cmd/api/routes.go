@@ -18,6 +18,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodPost, "/v1/posts", app.requiredAuthenticatedUser(app.createPostHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/posts/:id", app.requiredAuthenticatedUser(app.getPostHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/posts", app.requiredAuthenticatedUser(app.GetAllPostsHandler))
 
 	return router
 }

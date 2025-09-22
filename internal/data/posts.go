@@ -38,6 +38,10 @@ type PostModel struct {
 
 func (m PostModel) GetByID(postID, userID int64) (*Post, error) {
 
+	if postID < 1 || userID < 1 {
+		return nil, ErrPostNotFound
+	}
+
 	query := `
 		SELECT id,user_id,title,language,code,created_at,version
 		FROM posts
@@ -89,4 +93,47 @@ func (m PostModel) Insert(post *Post) error {
 		return err
 	}
 	return nil
+}
+
+func (m PostModel) GetAllByUserID(userID int64) ([]*Post, error) {
+
+	if userID < 1 {
+		return nil, ErrPostNotFound
+	}
+
+	query := `
+		SELECT id,user_id,title,language,code,created_at,version
+		FROM posts
+		WHERE user_id = $1
+			 `
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []*Post
+
+	for rows.Next() {
+		var post Post
+		if err := rows.Scan(
+			&post.ID,
+			&post.UserID,
+			&post.Title,
+			&post.Language,
+			&post.Code,
+			&post.CreatedAt,
+			&post.Version,
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, &post)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return posts, nil
 }

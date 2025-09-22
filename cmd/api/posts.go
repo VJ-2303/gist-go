@@ -72,3 +72,17 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (app *application) GetAllPostsHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+
+	posts, err := app.models.Post.GetAllByUserID(user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope{"posts": posts}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
